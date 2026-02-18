@@ -23,6 +23,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float gravity = 90f;
     [SerializeField] private float maxFallSpeed = 24f;
 
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private float groundCheckRadius = 0.5f;
+
     private float Acceleration => maxSpeed / accelerationTime;
     private float JumpSpeed => Mathf.Sqrt(2f * jumpHeight * gravity);
 
@@ -68,6 +71,11 @@ public class PlayerController : MonoBehaviour
         characterController.Move(worldVelocity * deltaTime);
     }
 
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawWireSphere(transform.position, groundCheckRadius);
+    }
+
     private void Turn()
     {
         var direction = Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up);
@@ -87,6 +95,8 @@ public class PlayerController : MonoBehaviour
         velocity.y = Mathf.MoveTowards(velocity.y, -maxFallSpeed, gravity * deltaTime);
     }
 
+    private bool OnGround() => Physics.CheckSphere(transform.position, groundCheckRadius, groundLayer);
+
     public void OnMove(InputValue value)
     {
         var input = value.Get<Vector2>();
@@ -95,7 +105,10 @@ public class PlayerController : MonoBehaviour
 
     public void OnJump(InputValue value)
     {
-        if (value.isPressed)
+        if (!value.isPressed)
+            return;
+
+        if (OnGround())
             velocity.y = JumpSpeed;
     }
 }
